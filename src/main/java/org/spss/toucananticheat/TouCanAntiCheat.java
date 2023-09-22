@@ -7,7 +7,7 @@ public final class TouCanAntiCheat extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
-
+        System.out.println("I am toucan");
     }
 
     @Override
