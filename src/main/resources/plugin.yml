@@ -1,0 +1,4 @@
+name: TouCanAntiCheat
+version: '${project.version}'
+main: org.spss.toucananticheat.TouCanAntiCheat
+api-version: '1.17'
