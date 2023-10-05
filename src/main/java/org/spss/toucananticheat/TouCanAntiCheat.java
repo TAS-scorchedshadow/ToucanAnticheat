@@ -8,10 +8,16 @@ public final class TouCanAntiCheat extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
         System.out.println("I am toucan");
+        OutgoingTest.register();
+
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+    }
+
+    public static TouCanAntiCheat getInstance() {
+        return getPlugin(TouCanAntiCheat.class);
     }
 }
