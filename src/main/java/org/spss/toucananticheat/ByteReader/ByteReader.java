@@ -9,9 +9,10 @@ public class ByteReader {
         int value = 0;
         int position = 0;
         int bytes_read = 0;
-        byte currentByte;
+        int currentByte;
         while (true) {
             currentByte = buffer[index + bytes_read];
+            System.out.printf("%02x => %02x", currentByte, buffer[index + bytes_read + 1]);
             value += ((int) (currentByte & SEGMENT_BITS) & 0xFF) << position;
             bytes_read += 1;
             if ((currentByte & CONTINUE_BIT) == 0)
@@ -22,6 +23,8 @@ public class ByteReader {
             if (position >= 32)
                 throw new RuntimeException("VarInt is too big");
         }
+        System.out.printf("\n%d\n", value);
+        System.out.printf("Bytes Read%d\n", bytes_read);
         return new ValInfo(value, bytes_read);
     }
 }

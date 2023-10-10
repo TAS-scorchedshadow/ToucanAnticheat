@@ -27,10 +27,13 @@ public class Chunk {
     public Chunk(PacketContainer packet) {
         if (packet.getType() == PacketType.Play.Server.MAP_CHUNK) {
             this.buffer = packet.getByteArrays().read(0);
+            if (buffer.length == 0) {
+                return;
+            }
             this.chunkX = packet.getIntegers().read(0);
             this.chunkZ = packet.getIntegers().read(1);
             this.packet = packet;
-            int blockNum = ((int) buffer[0] << 8) + ((int) buffer[1]);
+            // int blockNum = ((int) buffer[0] << 8) + ((int) buffer[1]);
             readData();
             // System.out.println("buffer size: " + Integer.toString(buffer.length));
             // System.out.println("block num: " + Integer.toString(blockNum));
@@ -50,7 +53,10 @@ public class Chunk {
         int z = chunkZ;
         int y = 0;
         while (block_entry_no < SIZE_OF_BLOCK_STATES) {
-            int blockNum = ((int) buffer[bytes_read] << 8) + ((int) buffer[bytes_read + 1]);
+            int mask = 0xFF;
+            int b0 = buffer[bytes_read] & mask;
+            int b1 = buffer[bytes_read + 1] & mask;
+            int blockNum = (b0 << 8) | b1;
             System.out.println("blockNum: " + Integer.toString(blockNum));
             bytes_read += 2;
             // Unsigned bit
@@ -68,7 +74,7 @@ public class Chunk {
             for (int j = 0; j < 8; j++) {
                 test_block = (test_block << 8) + buffer[bytes_read + j];
             }
-            System.out.printf("long: 0x%16X\n", test_block);
+            //System.out.printf("long: 0x%16X\n", test_block);
 
             // Palette
 
@@ -81,7 +87,10 @@ public class Chunk {
             // Read pallete
             for (int i = 0; i < paletteLength; i++) {
                 ValInfo paletteInfo = ByteReader.readVarInt(buffer, bytes_read);
-                bytes_read += paletteLengthInfo.getBytes_read();
+                System.out.printf("Number %d", bytes_read);
+                bytes_read += paletteInfo.getBytes_read();
+                System.out.printf("Number-Post %d\n", bytes_read);
+
 
                 // System.out.printf("Read: 0x%05X\n", (int) paletteInfo.getNum());
                 // try {
@@ -108,8 +117,8 @@ public class Chunk {
                 // }
                 palette.readBlock(block, bits_per_entry);
             }
-            // palette.readMap();
-            // palette.printPalette();
+            //palette.readMap();
+            palette.printPalette();
 
             break;
             // y += CHUNK_SECTION_HEIGHT;
@@ -141,6 +150,18 @@ public class Chunk {
 
     public int getSize() {
         return size;
+    }
+
+    //https://stackoverflow.com/questions/14827398/converting-byte-array-values-in-little-endian-order-to-short-values
+    public static short byteArrayToShortLE(final byte[] b, final int offset)
+    {
+        short value = 0;
+        for (int i = 0; i < 2; i++)
+        {
+            value |= (b[i + offset] & 0x000000FF) << (i * 8);
+        }
+
+        return value;
     }
 
 }

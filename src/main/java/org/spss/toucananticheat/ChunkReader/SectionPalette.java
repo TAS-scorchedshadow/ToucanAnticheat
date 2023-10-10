@@ -36,6 +36,7 @@ public class SectionPalette implements Palette {
 
     public void addEntry(int entryId) {
         paletteMap.add(entryId);
+        System.out.printf("       +: %s\n", Blocks.idToString(entryId));
     }
 
     @Override
@@ -55,7 +56,7 @@ public class SectionPalette implements Palette {
 
     public void readMap() {
         System.out.println(entryIds.size());
-        if (entryIds.size() == 4096) {
+        // if (entryIds.size() == 4096) {
             for (int i = 0; i < entryIds.size(); i++) {
                 int[] block_pos = getLocation(i);
                 if (!Blocks.idToString(getBlock(i)).equals("minecraft:air")
@@ -68,14 +69,16 @@ public class SectionPalette implements Palette {
                 }
                 // System.out.println("Read block: " + Blocks.idToString(getBlock(i)));
             }
-        }
+        //}
     }
 
     public void printPalette() {
-        if (entryIds.size() == 4096) {
+        //if (entryIds.size() == 4096) {
+            System.out.println("-----------START Pallete---------------");
             for (int i = 0; i < paletteMap.size(); i++) {
-                System.out.printf("Pallete : %s\n", Blocks.idToString(paletteMap.get(i)));
+                System.out.printf("Pallete : %s(%d)\n", Blocks.idToString(paletteMap.get(i)),paletteMap.get(i));
             }
-        }
+            System.out.println("-----------END Pallete---------------");
+        //}
     }
 }
