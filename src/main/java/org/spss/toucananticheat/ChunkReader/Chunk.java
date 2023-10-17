@@ -1,5 +1,8 @@
 package org.spss.toucananticheat.ChunkReader;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+
 import org.spss.toucananticheat.Blocks.Blocks;
 import org.spss.toucananticheat.ByteReader.ByteReader;
 import org.spss.toucananticheat.ByteReader.ValInfo;
@@ -9,10 +12,8 @@ import com.comphenix.protocol.events.PacketContainer;
 
 // https://www.spigotmc.org/threads/modify-chunk-before-being-sent-to-player.582295/
 public class Chunk {
-    private final int SIZE_OF_X = 16;
-    private final int SIZE_OF_Y = 16 * 16;
-    private final int CHUNK_SECTION_HEIGHT = 16;
-    private final int SIZE_OF_Z = 16;
+    private final int SECTION_HEIGHT = 16;
+    private final int SECTION_WIDTH = 16;
     private final int SIZE_OF_BLOCK_STATES = 4096;
 
     private int chunkX;
@@ -20,9 +21,9 @@ public class Chunk {
     private boolean fullChunk;
     private int bitmask;
     private byte[] buffer;
-    private int[][][] block = new int[SIZE_OF_X][SIZE_OF_Y][SIZE_OF_Z];
     private int size;
     private PacketContainer packet;
+    private List<Palette> palettes;
 
     public Chunk(PacketContainer packet) {
         if (packet.getType() == PacketType.Play.Server.MAP_CHUNK) {
@@ -46,23 +47,18 @@ public class Chunk {
 
     private void readData() {
         int bytes_read = 0;
-        int max_bytes = buffer.length;
-        int block_size = 0;
         int block_entry_no = 0;
-        int x = chunkX;
-        int z = chunkZ;
-        int y = 0;
         while (block_entry_no < SIZE_OF_BLOCK_STATES) {
             int mask = 0xFF;
             int b0 = buffer[bytes_read] & mask;
             int b1 = buffer[bytes_read + 1] & mask;
             int blockNum = (b0 << 8) | b1;
-            System.out.println("blockNum: " + Integer.toString(blockNum));
+            // System.out.println("blockNum: " + Integer.toString(blockNum));
             bytes_read += 2;
             // Unsigned bit
             int bits_per_entry = buffer[bytes_read] & 0xFF;
             bytes_read += 1;
-            System.out.println("bits per entry: " + Integer.toString(bits_per_entry));
+            // System.out.println("bits per entry: " + Integer.toString(bits_per_entry));
             if (bits_per_entry > 8 || bits_per_entry <= 0) {
                 System.out.println("Invalid bits_per_entry");
                 return;
@@ -82,23 +78,14 @@ public class Chunk {
             ValInfo paletteLengthInfo = ByteReader.readVarInt(buffer, bytes_read);
             bytes_read += paletteLengthInfo.getBytes_read();
             int paletteLength = (int) paletteLengthInfo.getNum();
-            System.out.println("pallete length: " + Integer.toString(paletteLength));
+            // System.out.println("pallete length: " + Integer.toString(paletteLength));
             SectionPalette palette = new SectionPalette(chunkX, 0, chunkZ);
             // Read pallete
             for (int i = 0; i < paletteLength; i++) {
                 ValInfo paletteInfo = ByteReader.readVarInt(buffer, bytes_read);
-                System.out.printf("Number %d", bytes_read);
+                // System.out.printf("Number %d", bytes_read);
                 bytes_read += paletteInfo.getBytes_read();
-                System.out.printf("Number-Post %d\n", bytes_read);
-
-
-                // System.out.printf("Read: 0x%05X\n", (int) paletteInfo.getNum());
-                // try {
-                // System.out.println("Read block: " + Blocks.idToString((int)
-                // paletteInfo.getNum()));
-                // } catch (Exception e) {
-                // e.printStackTrace();
-                // }
+                // System.out.printf("Number-Post %d\n", bytes_read);
                 palette.addEntry((int) paletteInfo.getNum());
             }
             // Read data array length
@@ -106,6 +93,9 @@ public class Chunk {
             int data_array_length = (int) data_array_length_info.getNum();
             System.out.println("data_array_length: " + Integer.toString(data_array_length));
             bytes_read += data_array_length_info.getBytes_read();
+
+            int data_array_index = bytes_read;
+
             for (int i = 0; i < data_array_length; i++) {
                 long block = 0;
                 for (int j = 0; j < 8; j++) {
@@ -117,9 +107,26 @@ public class Chunk {
                 // }
                 palette.readBlock(block, bits_per_entry);
             }
+
             //palette.readMap();
             palette.printPalette();
 
+            // Update the packet to remove all ores that don't have an adjacent air block
+            List<Long> new_data_arr = palette.createOrefuscatedDataArr(bits_per_entry);
+            if (new_data_arr.size() != data_array_length) {
+                System.out.println("Error: Mismatch data array lengths");
+                break;
+            }
+
+            for (int i = 0; i < new_data_arr.size(); i++) {
+                long block = new_data_arr.get(i);
+                ByteBuffer blockBuffer = ByteBuffer.allocate(Long.BYTES);
+                blockBuffer.putLong(block);
+                for (int j = 0; j < 8; j++) {
+                    buffer[data_array_index] = blockBuffer.get(j);
+                    data_array_index++;
+                }
+            }
             break;
             // y += CHUNK_SECTION_HEIGHT;
         }
@@ -163,5 +170,4 @@ public class Chunk {
 
         return value;
     }
-
 }

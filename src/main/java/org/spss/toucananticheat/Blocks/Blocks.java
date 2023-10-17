@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -22,6 +23,7 @@ import com.google.gson.JsonParser;
 
 public class Blocks {
     private static List<String> blocks;
+    private final static List<Integer> ores = new ArrayList<>(Arrays.asList(69, 70, 71, 72, 73, 74, 75, 263, 264, 3410, 3411, 3952, 3953, 3954, 3955, 5455, 5456, 6933, 17818, 17819));
 
     public static String idToString(int id) {
         if (blocks == null) {
@@ -43,6 +45,10 @@ public class Blocks {
             }
         }
         return blocks.get(id);
+    }
+
+    public static boolean isOre(int id) {
+        return ores.contains(id);
     }
 
     private static String readFromInputStream(InputStream inputStream)

@@ -6,11 +6,14 @@ import java.util.List;
 import org.spss.toucananticheat.Blocks.Blocks;
 
 public class SectionPalette implements Palette {
+    private final int airId = 0;
+    private int nonOreBlock = 0;
     private List<Integer> entryIds;
     private List<Integer> paletteMap;
 
     // x, z and then y
     private int base_position[];
+
 
     public SectionPalette(int x, int y, int z) {
         entryIds = new ArrayList<>();
@@ -19,6 +22,11 @@ public class SectionPalette implements Palette {
         base_position[0] = x;
         base_position[1] = z;
         base_position[2] = y;
+    }
+
+    @Override
+    public int blockNum() {
+        return entryIds.size();
     }
 
     @Override
@@ -35,8 +43,11 @@ public class SectionPalette implements Palette {
     }
 
     public void addEntry(int entryId) {
+        if (!Blocks.isOre(entryId)) {
+            nonOreBlock = entryId;
+        }
         paletteMap.add(entryId);
-        System.out.printf("       +: %s\n", Blocks.idToString(entryId));
+        // System.out.printf("       +: %s\n", Blocks.idToString(entryId));
     }
 
     @Override
@@ -52,6 +63,71 @@ public class SectionPalette implements Palette {
             shift_no += bits_per_entry;
             mask = mask << bits_per_entry;
         }
+    }
+
+    private void removeHiddenOres() {
+        int blockPos[][][] = new int [16][16][16];
+        int i = 0;
+        List<Position> ores = new ArrayList<>();
+
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    int block = getBlock(i);
+                    blockPos[x][y][z] = block;
+                    if (Blocks.isOre(block)) {
+                        ores.add(new Position(x, y, z, i));
+                    }
+                    i++;
+                }
+            }
+        }
+
+        for (Position ore : ores) {
+            boolean hasAir = false;
+            for (int y = ore.getY() - 1; y <= ore.getY() + 1; y++) {
+                for (int z = ore.getZ() - 1; z <= ore.getZ() + 1; z++) {
+                    for (int x = ore.getX() - 1; x <= ore.getX() + 1; x++) {
+                        if (Position.validSectionPosition(x, y, z)) {
+                            if (blockPos[x][y][z] == airId) {
+                                hasAir = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!hasAir) {
+                replaceBlock(ore);
+            }
+        }
+    }
+
+    // Replace the block with a block on the palette that isn't 
+    private void replaceBlock(Position ore) {
+        entryIds.set(ore.getIndex(), nonOreBlock);
+    }
+
+    public List<Long> createOrefuscatedDataArr(int bits_per_entry) {
+        removeHiddenOres();
+        List<Long> dataArr = new ArrayList<>();
+        int blockNo = 0;
+        int mask = 0;
+        for (int i = 0; i < bits_per_entry; i++) {
+            mask <<= 1;
+            mask++;
+        }
+        for (int i = 0; i < 64 * bits_per_entry; i++) {
+            long block = 0;
+            for (int j = 0; j < Math.floor(64 / bits_per_entry); j++) {
+                if (blockNo >= entryIds.size()) {
+                    break;
+                }
+                block |= (((long) entryIds.get(blockNo)) << (j*bits_per_entry)) & (mask << (j*bits_per_entry));
+                blockNo++;
+            }
+            dataArr.add(block);
+        }
+        return dataArr;
     }
 
     public void readMap() {
@@ -80,5 +156,19 @@ public class SectionPalette implements Palette {
             }
             System.out.println("-----------END Pallete---------------");
         //}
+    }
+
+    public static void main(String[] args) {
+        int block = 0;
+        long mask = 0;
+        for (int i = 0; i < 5; i++) {
+            mask <<= 1;
+            mask++;
+        }
+        int data = 0x1F;
+        int bits_per_entry = 5;
+        int j = 2;
+        block |= (((long) data) << (j*bits_per_entry)) & (mask << (j*bits_per_entry));
+        System.out.printf("%x", block);
     }
 }
