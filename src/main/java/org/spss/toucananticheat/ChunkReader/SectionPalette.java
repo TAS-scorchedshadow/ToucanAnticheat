@@ -85,17 +85,29 @@ public class SectionPalette implements Palette {
 
         for (Position ore : ores) {
             boolean hasAir = false;
-            for (int y = ore.getY() - 1; y <= ore.getY() + 1; y++) {
-                for (int z = ore.getZ() - 1; z <= ore.getZ() + 1; z++) {
-                    for (int x = ore.getX() - 1; x <= ore.getX() + 1; x++) {
-                        if (Position.validSectionPosition(x, y, z)) {
-                            if (blockPos[x][y][z] == airId) {
-                                hasAir = true;
-                            }
-                        }
+            int[] x = {ore.getX() - 1, ore.getX() + 1, ore.getX(), ore.getX(), ore.getX(), ore.getX()};
+            int[] y = {ore.getY(), ore.getY(), ore.getY() - 1, ore.getY() + 1, ore.getY(), ore.getY()};
+            int[] z = {ore.getZ(), ore.getZ(), ore.getZ(), ore.getZ(), ore.getZ() - 1, ore.getZ() + 1};
+            for (int j = 0; j < 6; j++) {
+                if (Position.validSectionPosition(x[j], y[j], z[j])) {
+                    if (blockPos[x[j]][y[j]][z[j]] == airId) {
+                        hasAir = true;
                     }
                 }
             }
+        
+
+            // for (int y = ore.getY() - 1; y <= ore.getY() + 1; y++) {
+            //     for (int z = ore.getZ() - 1; z <= ore.getZ() + 1; z++) {
+            //         for (int x = ore.getX() - 1; x <= ore.getX() + 1; x++) {
+            //             if (Position.validSectionPosition(x, y, z)) {
+            //                 if (blockPos[x][y][z] == airId) {
+            //                     hasAir = true;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
             if (!hasAir) {
                 replaceBlock(ore);
             }
