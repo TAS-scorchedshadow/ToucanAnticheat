@@ -96,18 +96,6 @@ public class SectionPalette implements Palette {
                 }
             }
         
-
-            // for (int y = ore.getY() - 1; y <= ore.getY() + 1; y++) {
-            //     for (int z = ore.getZ() - 1; z <= ore.getZ() + 1; z++) {
-            //         for (int x = ore.getX() - 1; x <= ore.getX() + 1; x++) {
-            //             if (Position.validSectionPosition(x, y, z)) {
-            //                 if (blockPos[x][y][z] == airId) {
-            //                     hasAir = true;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
             if (!hasAir) {
                 replaceBlock(ore);
             }
