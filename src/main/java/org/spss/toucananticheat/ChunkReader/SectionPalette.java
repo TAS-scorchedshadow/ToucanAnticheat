@@ -8,6 +8,7 @@ import org.spss.toucananticheat.Blocks.Blocks;
 public class SectionPalette implements Palette {
     private final int airId = 0;
     private int nonOreBlock = 0;
+    private int longNum = 0;
     private List<Integer> entryIds;
     private List<Integer> paletteMap;
 
@@ -52,16 +53,19 @@ public class SectionPalette implements Palette {
 
     @Override
     public void readBlock(long block, int bits_per_entry) {
+        longNum++;
         long mask = 0;
         for (int i = 0; i < bits_per_entry; i++) {
             mask = (mask << 1) + 1;
         }
         int shift_no = 0;
         for (int i = 0; i < Math.floor(64 / bits_per_entry); i++) {
-            long val = (block & mask) >>> shift_no;
+            if (entryIds.size() >= 4096) {
+                break;
+            }
+            long val = (block >>> shift_no) & mask;
             entryIds.add((int) val);
             shift_no += bits_per_entry;
-            mask = mask << bits_per_entry;
         }
     }
 
@@ -73,7 +77,12 @@ public class SectionPalette implements Palette {
         for (int y = 0; y < 16; y++) {
             for (int z = 0; z < 16; z++) {
                 for (int x = 0; x < 16; x++) {
-                    int block = getBlock(i);
+                    int block;
+                    if (entryIds.get(i) >= paletteMap.size()) {
+                        block = 0;
+                    } else {
+                        block = getBlock(i);
+                    }
                     blockPos[x][y][z] = block;
                     if (Blocks.isOre(block)) {
                         ores.add(new Position(x, y, z, i));
@@ -95,7 +104,6 @@ public class SectionPalette implements Palette {
                     }
                 }
             }
-        
             if (!hasAir) {
                 replaceBlock(ore);
             }
@@ -104,6 +112,7 @@ public class SectionPalette implements Palette {
 
     // Replace the block with a block on the palette that isn't 
     private void replaceBlock(Position ore) {
+        // System.out.printf("removing block: %s\n", Blocks.idToString(getBlock(ore.getIndex())));
         entryIds.set(ore.getIndex(), nonOreBlock);
     }
 
@@ -111,12 +120,12 @@ public class SectionPalette implements Palette {
         removeHiddenOres();
         List<Long> dataArr = new ArrayList<>();
         int blockNo = 0;
-        int mask = 0;
+        long mask = 0;
         for (int i = 0; i < bits_per_entry; i++) {
             mask <<= 1;
             mask++;
         }
-        for (int i = 0; i < 64 * bits_per_entry; i++) {
+        for (int i = 0; i < longNum; i++) {
             long block = 0;
             for (int j = 0; j < Math.floor(64 / bits_per_entry); j++) {
                 if (blockNo >= entryIds.size()) {
@@ -135,14 +144,14 @@ public class SectionPalette implements Palette {
         // if (entryIds.size() == 4096) {
             for (int i = 0; i < entryIds.size(); i++) {
                 int[] block_pos = getLocation(i);
-                if (!Blocks.idToString(getBlock(i)).equals("minecraft:air")
-                        && !Blocks.idToString(getBlock(i)).equals("minecraft:grass_block")
-                        && !Blocks.idToString(getBlock(i)).equals("minecraft:bedrock")
-                        && !Blocks.idToString(getBlock(i)).equals("minecraft:dirt")) {
+                // if (!Blocks.idToString(getBlock(i)).equals("minecraft:air")
+                //         && !Blocks.idToString(getBlock(i)).equals("minecraft:grass_block")
+                //         && !Blocks.idToString(getBlock(i)).equals("minecraft:bedrock")
+                //         && !Blocks.idToString(getBlock(i)).equals("minecraft:dirt")) {
                     System.out.printf("Block: %s at position %d x %d y %d z\n", Blocks.idToString(getBlock(i)),
                             block_pos[0],
                             block_pos[2], block_pos[1]);
-                }
+                // }
                 // System.out.println("Read block: " + Blocks.idToString(getBlock(i)));
             }
         //}

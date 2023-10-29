@@ -48,7 +48,7 @@ public class Chunk {
     private void readData() {
         int bytes_read = 0;
         int block_entry_no = 0;
-        while (block_entry_no < SIZE_OF_BLOCK_STATES) {
+        while (bytes_read < buffer.length) {
             int mask = 0xFF;
             int b0 = buffer[bytes_read] & mask;
             int b1 = buffer[bytes_read + 1] & mask;
@@ -58,7 +58,7 @@ public class Chunk {
             // Unsigned bit
             int bits_per_entry = buffer[bytes_read] & 0xFF;
             bytes_read += 1;
-            // System.out.println("bits per entry: " + Integer.toString(bits_per_entry));
+            System.out.println("bits per entry: " + Integer.toString(bits_per_entry));
             if (bits_per_entry > 8 || bits_per_entry <= 0) {
                 System.out.println("Invalid bits_per_entry");
                 return;
@@ -99,17 +99,20 @@ public class Chunk {
             for (int i = 0; i < data_array_length; i++) {
                 long block = 0;
                 for (int j = 0; j < 8; j++) {
-                    block = (block << 8) + buffer[bytes_read];
+                    block = (block << 8) + ((long) buffer[bytes_read] & 0xFF);
                     bytes_read += 1;
                 }
                 // if (bits_per_entry == 5) {
                 // System.out.printf("long: 0x%16X\n", block);
                 // }
+                // if (i == 0) {
+                //     System.out.printf("first block: 0x%x\n", block);
+                // }
                 palette.readBlock(block, bits_per_entry);
             }
 
-            //palette.readMap();
-            palette.printPalette();
+            // palette.printPalette();
+            // palette.readMap();
 
             // Update the packet to remove all ores that don't have an adjacent air block
             List<Long> new_data_arr = palette.createOrefuscatedDataArr(bits_per_entry);
@@ -118,16 +121,20 @@ public class Chunk {
                 break;
             }
 
+            // palette.readMap();
+
             for (int i = 0; i < new_data_arr.size(); i++) {
                 long block = new_data_arr.get(i);
                 ByteBuffer blockBuffer = ByteBuffer.allocate(Long.BYTES);
                 blockBuffer.putLong(block);
                 for (int j = 0; j < 8; j++) {
+                    // if (buffer[data_array_index] != blockBuffer.get(j)) {
+                    //     System.out.printf("Changing buffer at index %d from 0x%x to 0x%x\n", data_array_index, buffer[data_array_index], blockBuffer.get(j));
+                    // }
                     buffer[data_array_index] = blockBuffer.get(j);
                     data_array_index++;
                 }
             }
-            break;
             // y += CHUNK_SECTION_HEIGHT;
         }
     }
