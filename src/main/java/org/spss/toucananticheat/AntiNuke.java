@@ -33,7 +33,7 @@ public class AntiNuke implements Listener {
         Block block = player.getTargetBlock(null, 5);
         Location l = block.getLocation();
         String outStr = String.format("Material: %s, x:%d, y:%d, z:%d, num:%d", block.getType(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), counter.getRepeatOccurances());
-        player.sendMessage(outStr);
+        //player.sendMessage(outStr);
         if (!broken.getLocation().equals(block.getLocation())) {
             event.setCancelled(true);
         }
