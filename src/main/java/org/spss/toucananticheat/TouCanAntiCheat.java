@@ -9,7 +9,7 @@ public final class TouCanAntiCheat extends JavaPlugin {
         // Plugin startup logic
         System.out.println("I am toucan");
         OutgoingTest.register();
-
+        this.getServer().getPluginManager().registerEvents(new AntiNuke(), this);
     }
 
     @Override
