@@ -48,10 +48,11 @@ public final class OutgoingTest {
             @Override
             public void onPacketSending(PacketEvent event) {
                 // Handle x-ray checking
-                event.getPlayer().sendMessage("Trigger");
                 PacketContainer packet = event.getPacket();
 
-                // //
+                Chunk chunk = new Chunk(packet);
+
+                //
                 // https://www.spigotmc.org/threads/modify-chunk-before-being-sent-to-player.582295/
                 // byte[] buffer = packet.getByteArrays().read(0);
 
@@ -63,7 +64,6 @@ public final class OutgoingTest {
                 // count++;
                 // }
                 // System.out.println("------" + count + "-----");
-                Chunk chunk = new Chunk(packet);
             }
         });
 

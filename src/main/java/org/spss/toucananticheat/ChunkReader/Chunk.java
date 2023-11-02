@@ -58,7 +58,7 @@ public class Chunk {
             // Unsigned bit
             int bits_per_entry = buffer[bytes_read] & 0xFF;
             bytes_read += 1;
-            System.out.println("bits per entry: " + Integer.toString(bits_per_entry));
+            //System.out.println("bits per entry: " + Integer.toString(bits_per_entry));
             if (bits_per_entry > 8 || bits_per_entry <= 0) {
                 System.out.println("Invalid bits_per_entry");
                 return;
@@ -91,7 +91,7 @@ public class Chunk {
             // Read data array length
             ValInfo data_array_length_info = ByteReader.readVarInt(buffer, bytes_read);
             int data_array_length = (int) data_array_length_info.getNum();
-            System.out.println("data_array_length: " + Integer.toString(data_array_length));
+            //System.out.println("data_array_length: " + Integer.toString(data_array_length));
             bytes_read += data_array_length_info.getBytes_read();
 
             int data_array_index = bytes_read;
